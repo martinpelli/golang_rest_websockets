@@ -17,7 +17,7 @@ const (
 	HASH_COST = 8
 )
 
-type SingUpRequest struct {
+type SingUpLoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
@@ -33,7 +33,7 @@ type LoginResponse struct {
 
 func SingUpLoginHandler(server server.Server) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		var signUpRequest = SingUpRequest{}
+		var signUpRequest = SingUpLoginRequest{}
 		err := json.NewDecoder(request.Body).Decode(&signUpRequest)
 
 		if err != nil {
@@ -73,13 +73,12 @@ func SingUpLoginHandler(server server.Server) http.HandlerFunc {
 
 func LoginHandler(server server.Server) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		var loginRequest = SingUpRequest{}
-		err := json.NewDecoder(request.Body).Decode(&request)
+		var loginRequest = SingUpLoginRequest{}
+		err := json.NewDecoder(request.Body).Decode(&loginRequest)
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusBadRequest)
 			return
 		}
-
 		user, err := repositorys.GetUserByEmail(request.Context(), loginRequest.Email)
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
@@ -88,8 +87,7 @@ func LoginHandler(server server.Server) http.HandlerFunc {
 		if user == nil {
 			http.Error(writer, "Invalid credentials", http.StatusUnauthorized)
 		}
-
-		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(user.Password)); err != nil {
+		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password)); err != nil {
 			http.Error(writer, "Invalid credentials", http.StatusUnauthorized)
 			return
 		}
@@ -103,7 +101,7 @@ func LoginHandler(server server.Server) http.HandlerFunc {
 
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		signedToken, err := token.SignedString([]byte(server.Config().JWTSecret))
-		if user != nil {
+		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			return
 		}
