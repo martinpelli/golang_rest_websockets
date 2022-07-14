@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"golang_rest_websockets/models"
 	"log"
+
+	_ "github.com/lib/pq"
 )
 
 type PostgresRepository struct {
