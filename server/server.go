@@ -2,6 +2,8 @@ package server
 
 import (
 	"errors"
+	"golang_rest_websockets/database"
+	"golang_rest_websockets/repositorys"
 	"log"
 	"net/http"
 
@@ -52,6 +54,11 @@ func NewServer(context context.Context, config *Config) (*Broker, error) {
 func (broker *Broker) Start(binder func(server Server, router *mux.Router)) {
 	broker.router = mux.NewRouter()
 	binder(broker, broker.router)
+	repo, err := database.NewPostgresRepository(broker.config.DatabaseUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	repositorys.SetRepository(repo)
 	log.Println("Starting server on port", broker.Config().Port)
 	if err := http.ListenAndServe(broker.config.Port, broker.router); err != nil {
 		log.Fatal("ListenAndServe: ", err)
