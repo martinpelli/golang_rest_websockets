@@ -4,6 +4,7 @@ import (
 	"errors"
 	"golang_rest_websockets/database"
 	"golang_rest_websockets/repositorys"
+	"golang_rest_websockets/websocket"
 	"log"
 	"net/http"
 
@@ -19,15 +20,21 @@ type Config struct {
 
 type Server interface {
 	Config() *Config
+	Hub() *websocket.Hub
 }
 
 type Broker struct {
 	config *Config
 	router *mux.Router
+	hub    *websocket.Hub
 }
 
 func (broker *Broker) Config() *Config {
 	return broker.config
+}
+
+func (broker *Broker) Hub() *websocket.Hub {
+	return broker.hub
 }
 
 func NewServer(context context.Context, config *Config) (*Broker, error) {
@@ -46,6 +53,7 @@ func NewServer(context context.Context, config *Config) (*Broker, error) {
 	broker := &Broker{
 		config: config,
 		router: mux.NewRouter(),
+		hub:    websocket.NewHub(),
 	}
 
 	return broker, nil
@@ -58,6 +66,7 @@ func (broker *Broker) Start(binder func(server Server, router *mux.Router)) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	go broker.hub.Run()
 	repositorys.SetRepository(repo)
 	log.Println("Starting server on port", broker.Config().Port)
 	if err := http.ListenAndServe(broker.config.Port, broker.router); err != nil {
