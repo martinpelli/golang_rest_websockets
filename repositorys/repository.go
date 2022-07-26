@@ -10,6 +10,10 @@ type Repository interface {
 	GetUserById(context context.Context, id string) (*models.User, error)
 	GetUserByEmail(context context.Context, email string) (*models.User, error)
 	InsertPost(context context.Context, post *models.Post) error
+	GetPostById(context context.Context, id string) (*models.Post, error)
+	UpdatePost(context context.Context, post *models.Post) error
+	DeletePost(context context.Context, id string, userId string) error
+	ListPost(context context.Context, page uint64) ([]*models.Post, error)
 	Close() error
 }
 
@@ -37,4 +41,20 @@ func Close() error {
 
 func InsertPost(context context.Context, post *models.Post) error {
 	return implementation.InsertPost(context, post)
+}
+
+func GestPostById(context context.Context, id string) (*models.Post, error) {
+	return implementation.GetPostById(context, id)
+}
+
+func UpdatePost(context context.Context, post *models.Post) error {
+	return implementation.UpdatePost(context, post)
+}
+
+func DeletePost(context context.Context, id string, userId string) error {
+	return implementation.DeletePost(context, id, userId)
+}
+
+func ListPost(context context.Context, page uint64) ([]*models.Post, error) {
+	return implementation.ListPost(context, page)
 }
