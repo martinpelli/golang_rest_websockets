@@ -6,6 +6,7 @@ import (
 	"golang_rest_websockets/repositorys"
 	"golang_rest_websockets/server"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -111,5 +112,32 @@ func LoginHandler(server server.Server) http.HandlerFunc {
 			Token: signedToken,
 		})
 
+	}
+}
+
+func MeHandler(server server.Server) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		tokenString := strings.TrimSpace(request.Header.Get("Authorization"))
+		token, err := jwt.ParseWithClaims(tokenString, &models.AppClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(server.Config().JWTSecret), nil
+		})
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		if claims, ok := token.Claims.(*models.AppClaims); ok && token.Valid {
+			user, err := repositorys.GetUserById(request.Context(), claims.UserId)
+			if err != nil {
+				http.Error(writer, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			writer.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(writer).Encode(user)
+		} else {
+			http.Error(writer, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }

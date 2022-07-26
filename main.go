@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"golang_rest_websockets/handlers"
+	"golang_rest_websockets/middlewares"
 	"golang_rest_websockets/server"
 	"log"
 	"net/http"
@@ -36,7 +37,11 @@ func main() {
 }
 
 func BindRoutes(server server.Server, router *mux.Router) {
+	router.Use(middlewares.CheckAuthMiddleware(server))
+
 	router.HandleFunc("/", handlers.HomeHandler(server)).Methods(http.MethodGet)
 	router.HandleFunc("/signup", handlers.SingUpLoginHandler(server)).Methods(http.MethodPost)
 	router.HandleFunc("/login", handlers.LoginHandler(server)).Methods(http.MethodPost)
+	router.HandleFunc("/me", handlers.MeHandler(server)).Methods(http.MethodGet)
+	router.HandleFunc("/posts", handlers.InsertPostHandler(server)).Methods(http.MethodPost)
 }
