@@ -13,12 +13,12 @@ import (
 )
 
 type InsertPostRequest struct {
-	PostContent string `json:"postContent"`
+	PostContent string `json:"post_content"`
 }
 
 type PostResponse struct {
 	Id          string `json:"id"`
-	PostContent string `json:"content"`
+	PostContent string `json:"post_content"`
 }
 
 func InsertPostHandler(server server.Server) http.HandlerFunc {
